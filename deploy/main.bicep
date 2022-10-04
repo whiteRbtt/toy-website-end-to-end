@@ -24,10 +24,16 @@ var appServiceAppName = 'toy-website-${resourceNameSuffix}'
 var appServicePlanName = 'toy-website'
 var applicationInsightsName = 'toywebsite'
 var storageAccountName = 'mystorage${resourceNameSuffix}'
+var analyticWorkspaceName = 'myAnalyticsWorkspace-${resourceNameSuffix}'
 
 // Define the SKUs for each component based on the environment type.
 var environmentConfigurationMap = {
   Production: {
+    logAnalytics: {
+      sku: {
+        name: 'PerGB2018'
+      }
+    }
     appServicePlan: {
       sku: {
         name: 'S1'
@@ -41,6 +47,11 @@ var environmentConfigurationMap = {
     }
   }
   Test: {
+    logAnalytics: {
+      sku: {
+        name: 'PerGB2018'
+      }
+    }
     appServicePlan: {
       sku: {
         name: 'F1'
@@ -89,6 +100,14 @@ resource appServiceApp 'Microsoft.Web/sites@2021-01-15' = {
   }
 }
 
+resource workspace 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
+  name: analyticWorkspaceName
+  location: location
+  properties: {
+    sku: environmentConfigurationMap[environmentType].logAnalytics.sku
+  }
+}
+
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: applicationInsightsName
   location: location
@@ -107,4 +126,5 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   sku: environmentConfigurationMap[environmentType].storageAccount.sku
 }
 
+output appServiceAppName string = appServiceApp.name
 output appServiceAppHostName string = appServiceApp.properties.defaultHostName
